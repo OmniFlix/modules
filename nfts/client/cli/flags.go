@@ -20,6 +20,6 @@ var (
 
 func init() {
 	fsLicence.Bool(FlagLicence, false, "To give licence for user")
-	fsLicenceFee.String(FlagLicenceFee, "", "Amount to pay to get licence for nft")
+	fsLicenceFee.String(FlagLicenceFee, "", "Amount to pay to get licence for nfts")
 	fsRevenueShare.String(FlagRevenueShare, "", "Percentage of amount to get after giving licence")
 }

@@ -59,7 +59,7 @@ func (AppModuleBasic) GetTxCmd(cdc *codec.Codec) *cobra.Command {
 }
 
 func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
-	return nil
+	return cli.GetQueryCmd(cdc)
 }
 
 func (AppModuleBasic) RegisterInterfaceTypes(registry cdctypes.InterfaceRegistry) {
@@ -94,7 +94,7 @@ func (AppModule) QuerierRoute() string {
 }
 
 func (am AppModule) NewQuerierHandler() sdk.Querier {
-	return nil
+	return NewQuerier(am.keeper)
 }
 
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, data json.RawMessage) []abci.ValidatorUpdate {
@@ -115,6 +115,7 @@ func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
 }
 
 func (am AppModule) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) []abci.ValidatorUpdate {
+	EndBlocker(ctx, am.keeper)
 	return []abci.ValidatorUpdate{}
 }
 
@@ -236,6 +237,13 @@ func (am AppModule) OnRecvPacket(
 	switch data := data.(type) {
 	case BaseNFTPacket:
 		return handleXNFTRecvPacket(ctx, am.keeper, packet)
+	case PacketSlotBooking:
+		return handleSlotBookingRecvPacket(ctx, am.keeper, packet)
+	case PacketTokenDistribution:
+		return handleTokenDistributionRecvPacket(ctx, am.keeper, packet)
+	case PacketPayLicensingFeeAndNFTTransfer:
+		return handlePayLicensingFeeAndNFTTransferRecvPacket(ctx, am.keeper, packet)
+	
 	default:
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ICS-20 transfer message type: %T", data)
 		

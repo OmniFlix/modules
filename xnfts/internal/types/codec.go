@@ -15,14 +15,24 @@ var (
 
 // RegisterCodec registers the IBC transfer types
 func RegisterCodec(cdc *codec.Codec) {
-	cdc.RegisterConcrete(MsgXNFTTransfer{}, "ibc/xnfts/MsgXNFTTransfer", nil)
-	cdc.RegisterConcrete(BaseNFTPacket{}, "ibc/xnfts/BaseNFTPacket", nil)
+	cdc.RegisterConcrete(MsgXNFTTransfer{}, "ibc/xnft/MsgXNFTTransfer", nil)
+	cdc.RegisterConcrete(BaseNFTPacket{}, "ibc/xnft/BaseNFTPacket", nil)
 	
+	cdc.RegisterConcrete(MsgSlotBooking{}, "ibc/xnft/MsgSlotBooking", nil)
+	cdc.RegisterConcrete(PacketSlotBooking{}, "ibc/xnft/PacketSlotBooking", nil)
+	cdc.RegisterConcrete(PacketTokenDistribution{}, "ibc/xnft/PacketTokenDistribution", nil)
+	cdc.RegisterConcrete(PacketPayLicensingFeeAndNFTTransfer{}, "ibc/xnft/PacketPayLicensingFeeAndNFTTransfer", nil)
+	
+	cdc.RegisterConcrete(MsgPayLicensingFee{}, "ibc/xnft/MsgPayLicensingFee", nil)
+	cdc.RegisterConcrete(MsgSetParams{}, "xnft/MsgsetParams", nil)
+	cdc.RegisterConcrete(Params{}, "xnft/Params", nil)
+	cdc.RegisterConcrete(MsgDistributeFunds{}, "ibc/xnft/MsgDistributeFunds", nil)
 	cdc.RegisterInterface((*XNFTs)(nil), nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil), &MsgXNFTTransfer{})
+	registry.RegisterImplementations((*XNFTs)(nil), &BaseNFTPacket{})
 }
 
 func init() {

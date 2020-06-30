@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	
+	"github.com/FreeFlixMedia/modules/nfts/client/cli"
+	
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -13,7 +15,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	
-	"github.com/FreeFlixMedia/modules/nfts/client/cli"
 	"github.com/FreeFlixMedia/modules/nfts/internal/types"
 )
 
@@ -73,7 +74,7 @@ func (AppModule) Name() string {
 
 func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-func (AppModule) Route() string { return RouterKey }
+func (AppModule) Route() string { return RouteKey }
 
 func (am AppModule) NewHandler() sdk.Handler { return NewHandler(am.nftKeeper) }
 

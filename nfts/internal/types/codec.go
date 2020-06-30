@@ -6,8 +6,19 @@ import (
 )
 
 func RegisterCodec(cdc *codec.Codec) {
-	cdc.RegisterConcrete(MsgMintTweetNFT{}, "nft/MsgMintTweetNFT", nil)
-	cdc.RegisterConcrete(BaseTweetNFT{}, "nft/BaseTweetNFT", nil)
+	cdc.RegisterConcrete(MsgCreateInitialTweetNFT{}, "nfts/MsgCreateInitialNFT", nil)
+	cdc.RegisterConcrete(MsgMintTweetNFT{}, "nfts/MsgMintTweetNFT", nil)
+	cdc.RegisterConcrete(MsgCreateAdNFT{}, "nfts/MsgCreateAdNFT", nil)
+	cdc.RegisterConcrete(MsgLiveStream{}, "nfts/MsgLiveStream", nil)
+	cdc.RegisterConcrete(MsgBookSlot{}, "nfts/MsgBookSlot", nil)
+	cdc.RegisterConcrete(MsgUpdateAccessList{}, "nfts/MsgUpdateAccessList", nil)
+	cdc.RegisterConcrete(MsgUpdateHandlersInfo{}, "nfts/MsgUpdateHandlersInfo", nil)
+	cdc.RegisterConcrete(MsgClaimTwitterAccount{}, "nfts/MsgClaimTwitterAccount", nil)
+	
+	cdc.RegisterConcrete(BaseTweetNFT{}, "nfts/BaseTweetNFT", nil)
+	cdc.RegisterConcrete(BaseAdNFT{}, "nfts/BaseAdNFT", nil)
+	cdc.RegisterConcrete(BaseLiveStream{}, "nfts/BaseLiveStream", nil)
+	cdc.RegisterConcrete(BaseDNFT{}, "nfts/BaseDNFT", nil)
 }
 
 var (

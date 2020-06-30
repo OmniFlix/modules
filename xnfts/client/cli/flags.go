@@ -20,10 +20,6 @@ const (
 var (
 	PrimaryNFTID   = flag.NewFlagSet("", flag.ContinueOnError)
 	SecondaryNFTID = flag.NewFlagSet("", flag.ContinueOnError)
-	AssetID        = flag.NewFlagSet("", flag.ContinueOnError)
-	LicensingFee   = flag.NewFlagSet("", flag.ContinueOnError)
-	RevenueShare   = flag.NewFlagSet("", flag.ContinueOnError)
-	TwitterHandle  = flag.NewFlagSet("", flag.ContinueOnError)
 	Recipient      = flag.NewFlagSet("", flag.ContinueOnError)
 	AdNFTID        = flag.NewFlagSet("", flag.ContinueOnError)
 	Amount         = flag.NewFlagSet("", flag.ContinueOnError)
@@ -31,9 +27,9 @@ var (
 
 func init() {
 	
-	PrimaryNFTID.String(FlagPrimaryNFTID, "", "primary nft id")
-	SecondaryNFTID.String(FlagSecondaryNFTID, "", "secondary nft id")
+	PrimaryNFTID.String(FlagPrimaryNFTID, "", "primary nfts id")
+	SecondaryNFTID.String(FlagSecondaryNFTID, "", "secondary nfts id")
 	Recipient.String(FlagRecipient, "", "receiver address")
 	AdNFTID.String(FlagAdNFTID, "", "ad nft id")
-	Amount.String(FlagAmount, "", "amount to be paid while adding ad nft")
+	Amount.String(FlagAmount, "", "amount to be paid while adding ad nfts")
 }
