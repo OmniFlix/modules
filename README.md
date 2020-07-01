@@ -1,3 +1,9 @@
+For those of you that landed here for  the first time, please check out the [freeflix-media-hub](https://github.com/FreeFlixMedia/freeflix-media-hub) repository to setup the chain.
+
+In this document, you can go through the structure of both the ```nfts``` and the ```xnfts``` modules within. Please don't mind the plural convention, the production version will have a singular naming convention.
+
+This document in itself is extremely 'inspired' from prev. Code with Us resources, especially the [Scavenger Hunt](https://tutorials.cosmos.network/scavenge/tutorial/01-background.html) tutorial 
+
 Modules
 ===
 
