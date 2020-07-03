@@ -1,3 +1,11 @@
+
+### Packet Types
+
+#### BaseNFTPacket
+
+You may notice the reference to `types.BaseNFTPacket` throughout the `Keeper`. These is new struct defined in `./xnfts/types/packet.go` that contains all necessary information about different nft packets. You can create this file now and add the following:
+
+```go=
 package types
 
 import (
@@ -201,3 +209,11 @@ func (p *PacketPayLicensingFeeAndNFTTransfer) UnmarshalJSON(bytes []byte) error 
 	*p = PacketPayLicensingFeeAndNFTTransfer(data)
 	return nil
 }
+
+```
+
+You might also notice that each type has the `String` method. This allows us to render the struct as a string for rendering.
+
+**ToBaseTweetNFT**
+
+We use `ToBaseTweetNFT` to convert type from `BaseNFTPacket` to `BaseTweetNFT`
