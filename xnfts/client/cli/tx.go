@@ -25,6 +25,7 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 	
 	ics20XNFTTransferTxCmd.AddCommand(flags.PostCommands(
 		GetXNFTTxCmd(cdc),
+		GetMsgPayLicensingFee(cdc),
 	)...)
 	
 	return ics20XNFTTransferTxCmd
@@ -97,5 +98,35 @@ func GetXNFTTxCmd(cdc *codec.Codec) *cobra.Command {
 	cmd.Flags().String(FlagLicensingFee, "0coco", "Licenese fee")
 	cmd.Flags().String(FlagAssetID, "", "AssetID")
 	cmd.Flags().String(FlagTwitterHandle, "", "Twitter Handle")
+	return cmd
+}
+
+func GetMsgPayLicensingFee(cdc *codec.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "pay-licensing-fee [src-port] [src-channel] [dest-height] [amount] [recipient] [primary-nft-id] ",
+		Short: "This transaction is round trip tx, it will pay the licensing fee from coco account and get the secondary nfts from ff chain",
+		Args:  cobra.ExactArgs(6),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			inBuf := bufio.NewReader(cmd.InOrStdin())
+			txBldr := authtypes.NewTxBuilderFromCLI(inBuf).WithTxEncoder(authclient.GetTxEncoder(cdc))
+			cliCtx := context.NewCLIContextWithInput(inBuf).WithCodec(cdc)
+			
+			coins, err := sdk.ParseCoin(args[3])
+			if err != nil {
+				return err
+			}
+			destHeight, err := strconv.Atoi(args[2])
+			if err != nil {
+				return err
+			}
+			
+			msg := types.NewMsgPayLicensingFee(args[0], args[1], args[5], uint64(destHeight), coins, cliCtx.GetFromAddress(), args[4])
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+			
+			return authclient.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})
+		},
+	}
 	return cmd
 }

@@ -7,7 +7,9 @@ import (
 )
 
 var (
-	EventTypeNFTPacketTransfer = "nft_packet_transfer"
-	AttributeKeyReceiver       = "receiver"
-	AttributeValueCategory     = fmt.Sprintf("%s_%s", ibctypes.ModuleName, ModuleName)
+	EventTypeNFTPacketTransfer             = "nft_packet_transfer"
+	EventTypePayLicensingFeeAndNFTTransfer = "pay_licensing_fee_and_token_transfer"
+	
+	AttributeKeyReceiver   = "receiver"
+	AttributeValueCategory = fmt.Sprintf("%s_%s", ibctypes.ModuleName, ModuleName)
 )

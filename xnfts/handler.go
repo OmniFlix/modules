@@ -18,6 +18,8 @@ func NewHandler(k Keeper) sdk.Handler {
 		switch msg := msg.(type) {
 		case MsgXNFTTransfer:
 			return handleMsgXNFTTransfer(ctx, k, msg)
+		case MsgPayLicensingFee:
+			return handlePayLicensingFeeAndNFTTransfer(ctx, k, msg)
 		
 		default:
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ICS-20 xnft message type: %T", msg)
@@ -116,6 +118,90 @@ func handleXNFTRecvPacket(ctx sdk.Context, k Keeper, packet channeltypes.Packet)
 			sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory),
 		),
 	)
+	
+	return &sdk.Result{
+		Events: ctx.EventManager().Events().ToABCIEvents(),
+	}, nil
+}
+
+func handlePayLicensingFeeAndNFTTransfer(ctx sdk.Context, k Keeper, msg MsgPayLicensingFee) (*sdk.Result, error) {
+	
+	packet, err := k.PayLicensingFeeAndNFTTransfer(ctx, msg)
+	if err != nil {
+		return nil, err
+	}
+	if err := k.XTransfer(ctx, msg.SrcPort, msg.SrcChannel, msg.DestHeight, packet.GetBytes()); err != nil {
+		return nil, err
+	}
+	
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			EventTypePayLicensingFeeAndNFTTransfer,
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender.String()),
+			sdk.NewAttribute(types.AttributeKeyReceiver, msg.Recipient),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.LicensingFee.String()),
+		),
+	)
+	
+	return &sdk.Result{
+		Events: ctx.EventManager().Events().ToABCIEvents(),
+	}, nil
+}
+
+func handlePayLicensingFeeAndNFTTransferRecvPacket(ctx sdk.Context, k Keeper, packet channeltypes.Packet) (*sdk.Result, error) {
+	
+	var data PacketPayLicensingFeeAndNFTTransfer
+	if err := types.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-20 transfer packet data: %s", err.Error())
+	}
+	
+	acknowledgement := PostCreationPacketAcknowledgement{
+		Success: true,
+		Error:   "",
+	}
+	
+	nft, found := k.GetTweetNFTByID(ctx, data.PrimaryNFTID)
+	if !found {
+		acknowledgement = PostCreationPacketAcknowledgement{
+			Success: false,
+			Error:   "nft not found",
+		}
+	}
+	
+	if err := k.OnRecvXNFTTokenTransfer(ctx, data); err != nil {
+		acknowledgement = PostCreationPacketAcknowledgement{
+			Success: false,
+			Error:   err.Error(),
+		}
+	}
+	
+	if err := k.PacketExecuted(ctx, packet, acknowledgement.GetBytes()); err != nil {
+		return nil, err
+	}
+	
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			EventTypePayLicensingFeeAndNFTTransfer,
+			sdk.NewAttribute(sdk.AttributeKeyModule, AttributeValueCategory),
+			sdk.NewAttribute(types.AttributeKeyReceiver, data.Recipient),
+		),
+	)
+	
+	input := NFTInput{
+		PrimaryNFTID:  data.PrimaryNFTID,
+		Recipient:     data.Sender,
+		AssetID:       nft.AssetID,
+		LicensingFee:  data.LicensingFee,
+		RevenueShare:  nft.RevenueShare,
+		TwitterHandle: nft.TwitterHandle,
+	}
+	
+	msg := NewMsgXNFTTransfer(packet.DestinationPort, packet.DestinationChannel, packet.GetTimeoutHeight(),
+		GetHexAddressFromBech32String(data.Recipient), input)
+	
+	if err := k.XNFTTransfer(ctx, msg); err != nil {
+		return nil, err
+	}
 	
 	return &sdk.Result{
 		Events: ctx.EventManager().Events().ToABCIEvents(),

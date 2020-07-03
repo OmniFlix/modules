@@ -135,3 +135,69 @@ type PostCreationPacketAcknowledgement struct {
 func (ack PostCreationPacketAcknowledgement) GetBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(ack))
 }
+
+type PacketPayLicensingFeeAndNFTTransfer struct {
+	PrimaryNFTID string   `json:"primary_nft_id"`
+	LicensingFee sdk.Coin `json:"licensing_fee"`
+	Recipient    string   `json:"recipient"`
+	Sender       string   `json:"sender"`
+}
+
+func NewPacketXNFTTokenTransfer(fee sdk.Coin, recipient, sender, primaryNFTID string) PacketPayLicensingFeeAndNFTTransfer {
+	return PacketPayLicensingFeeAndNFTTransfer{
+		LicensingFee: fee,
+		PrimaryNFTID: primaryNFTID,
+		Recipient:    recipient,
+		Sender:       sender,
+	}
+}
+
+var _ XNFTs = PacketPayLicensingFeeAndNFTTransfer{}
+
+func (p PacketPayLicensingFeeAndNFTTransfer) GetBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(p))
+}
+
+func (p PacketPayLicensingFeeAndNFTTransfer) String() string {
+	return fmt.Sprintf(`
+PrimaryNFTID: %s,
+Recipient: %s,
+Sender: %s,
+LicensingFee: %s
+`, p.PrimaryNFTID, p.Recipient, p.Sender, p.LicensingFee.String())
+}
+
+func (p PacketPayLicensingFeeAndNFTTransfer) ValidateBasic() error {
+	if len(p.PrimaryNFTID) == 0 {
+		return fmt.Errorf("invalid input field, primary nfts id")
+	}
+	
+	if p.LicensingFee.IsZero() {
+		return fmt.Errorf("invalid licensing fee")
+	}
+	
+	if len(p.Recipient) == 0 {
+		return fmt.Errorf("invalid input field, recipient address")
+	}
+	if len(p.Sender) == 0 {
+		return fmt.Errorf("invalid input field, sender address")
+	}
+	return nil
+}
+
+func (p PacketPayLicensingFeeAndNFTTransfer) MarshalJSON() ([]byte, error) {
+	type tmp PacketPayLicensingFeeAndNFTTransfer
+	return json.Marshal(tmp(p))
+}
+
+func (p *PacketPayLicensingFeeAndNFTTransfer) UnmarshalJSON(bytes []byte) error {
+	type tmp PacketPayLicensingFeeAndNFTTransfer
+	var data tmp
+	
+	if err := json.Unmarshal(bytes, &data); err != nil {
+		return err
+	}
+	
+	*p = PacketPayLicensingFeeAndNFTTransfer(data)
+	return nil
+}

@@ -6,14 +6,14 @@ import (
 )
 
 type (
-	Keeper = keeper.Keeper
-	
-	MsgXNFTTransfer = types.MsgXNFTTransfer
-	BaseNFTPacket   = types.BaseNFTPacket
-	
-	PostCreationPacketAcknowledgement = types.PostCreationPacketAcknowledgement
-	
-	XNFTs = types.XNFTs
+	Keeper                              = keeper.Keeper
+	BaseNFTPacket                       = types.BaseNFTPacket
+	NFTInput                            = types.NFTInput
+	XNFTs                               = types.XNFTs
+	MsgXNFTTransfer                     = types.MsgXNFTTransfer
+	MsgPayLicensingFee                  = types.MsgPayLicensingFee
+	PostCreationPacketAcknowledgement   = types.PostCreationPacketAcknowledgement
+	PacketPayLicensingFeeAndNFTTransfer = types.PacketPayLicensingFeeAndNFTTransfer
 )
 
 const (
@@ -24,10 +24,13 @@ const (
 )
 
 var (
-	NewKeeper                  = keeper.NewKeeper
-	RegisterCodec              = types.RegisterCodec
-	RegisterInterfaces         = types.RegisterInterfaces
-	AttributeValueCategory     = types.AttributeValueCategory
-	AttributeKeyReceiver       = types.AttributeKeyReceiver
-	EventTypeNFTPacketTransfer = types.EventTypeNFTPacketTransfer
+	NewKeeper                              = keeper.NewKeeper
+	RegisterCodec                          = types.RegisterCodec
+	RegisterInterfaces                     = types.RegisterInterfaces
+	NewMsgXNFTTransfer                     = types.NewMsgXNFTTransfer
+	GetHexAddressFromBech32String          = types.GetHexAddressFromBech32String
+	AttributeValueCategory                 = types.AttributeValueCategory
+	AttributeKeyReceiver                   = types.AttributeKeyReceiver
+	EventTypeNFTPacketTransfer             = types.EventTypeNFTPacketTransfer
+	EventTypePayLicensingFeeAndNFTTransfer = types.EventTypePayLicensingFeeAndNFTTransfer
 )

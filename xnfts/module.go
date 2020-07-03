@@ -236,6 +236,8 @@ func (am AppModule) OnRecvPacket(
 	switch data := data.(type) {
 	case BaseNFTPacket:
 		return handleXNFTRecvPacket(ctx, am.keeper, packet)
+	case PacketPayLicensingFeeAndNFTTransfer:
+		return handlePayLicensingFeeAndNFTTransferRecvPacket(ctx, am.keeper, packet)
 	default:
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized ICS-20 transfer message type: %T", data)
 		

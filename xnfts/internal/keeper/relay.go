@@ -120,3 +120,17 @@ func (k Keeper) OnRecvNFTPacket(ctx sdk.Context, data types.BaseNFTPacket, packe
 	})
 	return nil
 }
+
+func (k Keeper) OnRecvXNFTTokenTransfer(ctx sdk.Context, data types.PacketPayLicensingFeeAndNFTTransfer) error {
+	
+	receiver, err := sdk.AccAddressFromBech32(data.Recipient)
+	if err != nil {
+		return err
+	}
+	
+	_, err = k.bankKeeper.AddCoins(ctx, receiver, sdk.Coins{data.LicensingFee})
+	if err != nil {
+		return err
+	}
+	return nil
+}

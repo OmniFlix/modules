@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+	
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	host "github.com/cosmos/cosmos-sdk/x/ibc/24-host"
@@ -97,5 +99,79 @@ func (m MsgXNFTTransfer) GetSignBytes() []byte {
 }
 
 func (m MsgXNFTTransfer) GetSigners() []sdk.AccAddress {
+	return []sdk.AccAddress{m.Sender}
+}
+
+// --------------------------------------------------------------------
+
+type MsgPayLicensingFee struct {
+	Sender       sdk.AccAddress `json:"sender"`
+	Recipient    string         `json:"recipient"`
+	LicensingFee sdk.Coin       `json:"licensing_fee"`
+	PrimaryNFTID string         `json:"primary_nft_id"`
+	
+	SrcPort    string `json:"src_port"`
+	SrcChannel string `json:"src_channel"`
+	DestHeight uint64 `json:"dest_height"`
+}
+
+func NewMsgPayLicensingFee(
+	sourcePort, sourceChannel, primaryNFTID string, destHeight uint64, fee sdk.Coin, sender sdk.AccAddress, receiver string,
+) MsgPayLicensingFee {
+	return MsgPayLicensingFee{
+		SrcPort:      sourcePort,
+		SrcChannel:   sourceChannel,
+		DestHeight:   destHeight,
+		PrimaryNFTID: primaryNFTID,
+		LicensingFee: fee,
+		Sender:       sender,
+		Recipient:    receiver,
+	}
+}
+
+var _ sdk.Msg = MsgPayLicensingFee{}
+
+func (m MsgPayLicensingFee) Route() string {
+	return RouterKey
+}
+
+func (m MsgPayLicensingFee) Type() string {
+	return "msg_pay_licensing_fee_and_nft_transfer"
+}
+
+func (m MsgPayLicensingFee) ValidateBasic() error {
+	if err := host.PortIdentifierValidator(m.SrcPort); err != nil {
+		return sdkerrors.Wrap(err, "invalid source port ID")
+	}
+	if err := host.ChannelIdentifierValidator(m.SrcChannel); err != nil {
+		return sdkerrors.Wrap(err, "invalid source channel ID")
+	}
+	
+	if !m.LicensingFee.IsValid() {
+		return sdkerrors.ErrInvalidCoins
+	}
+	if m.Sender.Empty() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing sender address")
+	}
+	if m.Recipient == "" {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing recipient address")
+	}
+	
+	if len(m.PrimaryNFTID) == 0 {
+		return fmt.Errorf("invalid input field, primary nfts id")
+	}
+	
+	if m.LicensingFee.IsZero() {
+		return fmt.Errorf("invalid licensing fee")
+	}
+	
+	return nil
+}
+
+func (m MsgPayLicensingFee) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(m))
+}
+
+func (m MsgPayLicensingFee) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{m.Sender}
 }

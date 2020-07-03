@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"strings"
 	
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,6 +13,7 @@ import (
 	ibctypes "github.com/cosmos/cosmos-sdk/x/ibc/types"
 	"github.com/tendermint/tendermint/libs/log"
 	
+	"github.com/FreeFlixMedia/modules/nfts"
 	"github.com/FreeFlixMedia/modules/xnfts/internal/types"
 )
 
@@ -83,4 +85,108 @@ func (k Keeper) GetPort(ctx sdk.Context) string {
 
 func (k Keeper) ClaimCapability(ctx sdk.Context, cap *capability.Capability, name string) error {
 	return k.scopedKeeper.ClaimCapability(ctx, cap, name)
+}
+
+func (keeper Keeper) PayLicensingFeeAndNFTTransfer(ctx sdk.Context, msg types.MsgPayLicensingFee) (
+	types.PacketPayLicensingFeeAndNFTTransfer, error) {
+	snfts := keeper.GetAllTweetNFTs(ctx)
+	
+	for _, _nft := range snfts {
+		if strings.EqualFold(_nft.PrimaryNFTID, msg.PrimaryNFTID) {
+			return types.PacketPayLicensingFeeAndNFTTransfer{}, sdkerrors.Wrap(nfts.ErrInvalidLicense, "primary nfts already licensed")
+		}
+	}
+	
+	_, err := keeper.SubtractCoins(ctx, msg.Sender, sdk.Coins{msg.LicensingFee})
+	if err != nil {
+		return types.PacketPayLicensingFeeAndNFTTransfer{}, err
+	}
+	
+	packet := types.PacketPayLicensingFeeAndNFTTransfer{
+		PrimaryNFTID: msg.PrimaryNFTID,
+		LicensingFee: msg.LicensingFee,
+		Sender:       msg.Sender.String(),
+		Recipient:    msg.Recipient,
+	}
+	
+	return packet, nil
+}
+
+func (keeper Keeper) UpdateSecondaryNFTOwner(ctx sdk.Context, msg types.MsgXNFTTransfer) (types.BaseNFTPacket, error) {
+	var packet types.BaseNFTPacket
+	_nft, found := keeper.GetTweetNFTByID(ctx, msg.PrimaryNFTID)
+	if !found {
+		return types.BaseNFTPacket{}, sdkerrors.Wrap(nfts.ErrNFTNotFound, "")
+	}
+	
+	if !_nft.License {
+		return types.BaseNFTPacket{}, sdkerrors.Wrap(nfts.ErrInvalidLicense, fmt.Sprintf("unable to transfer %s", _nft.PrimaryNFTID))
+	}
+	
+	if !msg.Sender.Equals(types.GetHexAddressFromBech32String(_nft.PrimaryOwner)) {
+		return types.BaseNFTPacket{}, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "")
+	}
+	
+	packet.PrimaryNFTID = _nft.PrimaryNFTID
+	packet.PrimaryNFTOwner = _nft.PrimaryOwner
+	packet.License = _nft.License
+	packet.AssetID = _nft.AssetID
+	packet.RevenueShare = _nft.RevenueShare
+	packet.LicensingFee = _nft.LicensingFee
+	packet.SecondaryNFTOwner = msg.Recipient
+	packet.TwitterHandle = _nft.TwitterHandle
+	
+	return packet, nil
+}
+
+func (keeper Keeper) CreateSecondaryNFT(ctx sdk.Context, msg types.MsgXNFTTransfer) (types.BaseNFTPacket, error) {
+	var packet types.BaseNFTPacket
+	
+	_, err := keeper.SubtractCoins(ctx, msg.Sender, sdk.Coins{msg.LicensingFee})
+	if err != nil {
+		return types.BaseNFTPacket{}, err
+	}
+	
+	count := keeper.GetGlobalTweetCount(ctx)
+	sNFTID := nfts.GetSecondaryNFTID(count)
+	
+	packet.PrimaryNFTOwner = msg.Recipient
+	packet.License = true
+	packet.AssetID = msg.AssetID
+	packet.RevenueShare = msg.RevenueShare
+	packet.LicensingFee = msg.LicensingFee
+	packet.SecondaryNFTID = sNFTID
+	packet.SecondaryNFTOwner = msg.Sender.String()
+	packet.TwitterHandle = msg.TwitterHandle
+	
+	keeper.MintTweetNFT(ctx, *packet.ToBaseTweetNFT())
+	keeper.SetTweetIDToAccount(ctx, msg.Sender, sNFTID)
+	keeper.SetGlobalTweetCount(ctx, count+1)
+	
+	return packet, nil
+}
+
+func (keeper Keeper) XNFTTransfer(ctx sdk.Context, msg types.MsgXNFTTransfer) error {
+	var packet types.BaseNFTPacket
+	
+	if nfts.GetContextOfCurrentChain() == nfts.FreeFlixContext {
+		_packet, err := keeper.UpdateSecondaryNFTOwner(ctx, msg)
+		if err != nil {
+			return err
+		}
+		packet = _packet
+		
+	} else if nfts.GetContextOfCurrentChain() == nfts.CoCoContext {
+		_packet, err := keeper.CreateSecondaryNFT(ctx, msg)
+		if err != nil {
+			return err
+		}
+		packet = _packet
+	}
+	
+	if err := keeper.XTransfer(ctx, msg.SourcePort, msg.SourceChannel, msg.DestHeight, packet.GetBytes()); err != nil {
+		return err
+	}
+	
+	return nil
 }

@@ -16,7 +16,10 @@ var (
 // RegisterCodec registers the IBC transfer types
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgXNFTTransfer{}, "ibc/xnfts/MsgXNFTTransfer", nil)
+	cdc.RegisterConcrete(MsgPayLicensingFee{}, "ibc/xnft/MsgPayLicensingFee", nil)
+	
 	cdc.RegisterConcrete(BaseNFTPacket{}, "ibc/xnfts/BaseNFTPacket", nil)
+	cdc.RegisterConcrete(PacketPayLicensingFeeAndNFTTransfer{}, "ibc/xnft/PacketPayLicensingFeeAndNFTTransfer", nil)
 	
 	cdc.RegisterInterface((*XNFTs)(nil), nil)
 }

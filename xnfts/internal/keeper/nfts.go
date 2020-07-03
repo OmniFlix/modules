@@ -32,3 +32,11 @@ func (k Keeper) SetTweetIDToAccount(ctx sdk.Context, addr sdk.AccAddress, id str
 	k.nftKeeper.SetTweetIDToAccount(ctx, addr, id)
 	return
 }
+
+func (k Keeper) AddCoins(ctx sdk.Context, addr sdk.AccAddress, amount sdk.Coins) (sdk.Coins, error) {
+	return k.bankKeeper.AddCoins(ctx, addr, amount)
+}
+
+func (k Keeper) SubtractCoins(ctx sdk.Context, addr sdk.AccAddress, amount sdk.Coins) (sdk.Coins, error) {
+	return k.bankKeeper.SubtractCoins(ctx, addr, amount)
+}
